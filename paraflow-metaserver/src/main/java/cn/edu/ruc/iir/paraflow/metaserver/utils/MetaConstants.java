@@ -50,9 +50,6 @@ public final class MetaConstants
             "CREATE TABLE meta_tblprivmodel (tblprivid SERIAL primary key, tblid int REFERENCES meta_tblmodel(tblid), userid int REFERENCES meta_usermodel(userid), privtype int, granttime bigint, constraint unique_tblpriv unique(tblid,userid,privtype));";
     public static String createBlockIndexSql =
             "CREATE TABLE meta_blockindex (meta_blockindexid SERIAL primary key, tblid int REFERENCES meta_tblmodel(tblid), fibervalue int, timebegin bigint, timeend bigint, timezone varchar(50), sortcolumnid int, blockpath varchar(1024));";
-    public static final String createSampleTimeSql =
-            "CREATE TABLE meta_sampletime (sampletime varchar(50), constraint unique_ver unique(sampletime));";
-
     public static String getMetaTablesSql =
             "SELECT tablename FROM pg_tables WHERE tablename LIKE 'meta_%' ORDER BY tablename;";
 
