@@ -114,6 +114,7 @@ public class TestMetaClient
                 123,
                 20170800,
                 20170802,
+                1,
                 "hdfs://127.0.0.1:5432/paraflow/test/grip/123");
         assertEquals(expect, status);
         try {
@@ -137,6 +138,7 @@ public class TestMetaClient
                 234,
                 20170803,
                 20170805,
+                1,
                 "hdfs://127.0.0.1:5432/paraflow/test/grip/234");
         assertEquals(expect, status);
         try {
@@ -160,6 +162,7 @@ public class TestMetaClient
                 345,
                 20170806,
                 20170808,
+                1,
                 "hdfs://127.0.0.1:5432/paraflow/test/grip/345");
         assertEquals(expect, status);
         try {
@@ -183,6 +186,7 @@ public class TestMetaClient
                 456,
                 20170809,
                 20170811,
+                1,
                 "hdfs://127.0.0.1:5432/paraflow/test/grip/456");
         assertEquals(expect, status);
         try {

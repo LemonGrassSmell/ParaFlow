@@ -77,7 +77,7 @@ public class DataSorter
     /**
      * compact the fiber buffer
      *
-     * @param fiberId which fiber to be compacted. if -1, all fibers will be compacted.
+     * @param fiberId which fiber to be compacted. if -1, all fibers will be compacted.？？？？？
      * */
     private void sort(int fiberId)
     {
@@ -85,7 +85,7 @@ public class DataSorter
         if (fiberId == -1) {
 //            Arrays.stream(fiberBuffers).forEach(fiberBuffer -> {
 //                if (fiberBuffer != null) {
-//                    Arrays.sort(fiberBuffer, Comparator.comparingLong(ParaflowRecord::getTimestamp));
+//                    Arrays.sort(fiberBuffer, Comparator.comparingLong(ParaflowRecord::getTimestamp));//降序排列
 //                    ParaflowSortedBuffer sortedBuffer = new ParaflowSortedBuffer(fiberBuffers);
 ////                    sorterCompactorBlockingQueue.offer(sortedBuffer);
 //                    System.out.println("sorted buffer appended");

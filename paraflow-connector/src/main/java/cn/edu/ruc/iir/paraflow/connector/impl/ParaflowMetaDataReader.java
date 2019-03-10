@@ -161,8 +161,10 @@ public class ParaflowMetaDataReader
         }
         int fiberColId = tblParam.getFiberColId();
         int timeColId = tblParam.getTimeColId();
+        int sortColId = tblParam.getSortColId(); //metaproto的这种函数是在哪里编写的来着
         String fiberColName = metaClient.getColumnName(tblParam.getDbId(), tblParam.getTblId(), fiberColId).getColumn();
         String timeColName = metaClient.getColumnName(tblParam.getDbId(), tblParam.getTblId(), timeColId).getColumn();
+        String sortColName = metaClient.getColumnName(tblParam.getDbId(), tblParam.getTblId(), sortColId).getColumn();
         String partitionerName = tblParam.getFuncName();
 //        ParaflowFiberPartitioner partitioner = parsePartitioner(partitionerName);
 //        if (partitioner == null) {
@@ -177,7 +179,8 @@ public class ParaflowMetaDataReader
             // construct ColumnHandle
             ParaflowColumnHandle fiberCol = getColumnHandle(connectorId, fiberColName, tblName, dbName);
             ParaflowColumnHandle timeCol = getColumnHandle(connectorId, timeColName, tblName, dbName);
-            tableLayout = new ParaflowTableLayoutHandle(tableHandle, fiberCol, timeCol, partitionerName, StorageFormat.PARQUET, Optional.empty());
+            ParaflowColumnHandle sortCol = getColumnHandle(connectorId, sortColName, tblName, dbName);
+            tableLayout = new ParaflowTableLayoutHandle(tableHandle, fiberCol, timeCol, sortCol, partitionerName, StorageFormat.PARQUET, Optional.empty());
         }
         return Optional.of(tableLayout);
     }
@@ -307,14 +310,24 @@ public class ParaflowMetaDataReader
         metaClient.deleteTable(schemaName, tableName);
     }
 
-    public List<String> filterBlocks(String db, String table, int fiberId, long timeLow, long timeHigh)
+    public List<String> filterBlocks(String db, String table, int fiberId, long timeLow, long timeHigh, int sortColumnId)
     {
         MetaProto.StringListType stringListType;
-        if (fiberId == -1) {
-            stringListType = metaClient.filterBlockIndex(db, table, timeLow, timeHigh);
+        if (sortColumnId == -1) {
+            if (fiberId == -1) {
+                stringListType = metaClient.filterBlockIndex(db, table, timeLow, timeHigh);
+            }
+            else {
+                stringListType = metaClient.filterBlockIndexByFiber(db, table, fiberId, timeLow, timeHigh);
+            }
         }
         else {
-            stringListType = metaClient.filterBlockIndexByFiber(db, table, fiberId, timeLow, timeHigh);
+            if (fiberId == -1) {
+                stringListType = metaClient.filterBlockIndexBySortCol(db, table, timeLow, timeHigh, sortColumnId);
+            }
+            else {
+                stringListType = metaClient.filterBlockIndexByFiberSortCol(db, table, fiberId, timeLow, timeHigh, sortColumnId);
+            }
         }
         List<String> resultL = new ArrayList<>();
         for (int i = 0; i < stringListType.getStrCount(); i++) {

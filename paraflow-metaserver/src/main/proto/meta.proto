@@ -34,6 +34,8 @@ service Meta {
     rpc createUser(UserParam) returns (ResponseStatus) {}
     rpc filterBlockIndex(FilterBlockIndexParam) returns (StringListType) {}
     rpc filterBlockIndexByFiber(FilterBlockIndexByFiberParam) returns (StringListType) {}
+    rpc filterBlockIndexBySortCol(FilterBlockIndexBySortColParam) returns (StringListType) {}
+    rpc filterBlockIndexByFiberSortCol(FilterBlockIndexByFiberSortColParam) returns (StringListType) {}
     rpc stopServer(NoneType) returns (NoneType) {}
 }
 
@@ -120,7 +122,8 @@ message BlockIndex {
     int64 timeBegin = 4;
     int64 timeEnd = 5;
     string timeZone = 6;
-    string blockPath = 7;
+    int32 sortColumnId = 7;
+    string blockPath = 8;
 }
 
 // Customized types
@@ -176,8 +179,9 @@ message TblParam {
     string storageFormatName = 11;
     int32 fiberColId = 12;
     int32 timeColId = 13;
-    string funcName = 14;
-    ColListType colList = 15;
+    int32 sortColId = 14;
+    string funcName = 15;
+    ColListType colList = 16;
 }
 
 message ColParam {
@@ -247,7 +251,8 @@ message BlockIndexParam {
     int64 timeBegin = 4;
     int64 timeEnd = 5;
     string timeZone = 6;
-    string blockPath = 7;
+    int32 sortColumnId = 7;
+    string blockPath = 8;
 }
 
 message UpdateBlockPathParam {
@@ -268,6 +273,23 @@ message FilterBlockIndexByFiberParam {
     FiberValueType value = 3;
     int64 timeBegin = 4;
     int64 timeEnd = 5;
+}
+
+message FilterBlockIndexBySortColParam {
+    DbNameParam database = 1;
+    TblNameParam table = 2;
+    int64 timeBegin = 3;
+    int64 timeEnd = 4;
+    int32 sortColumnId = 5;
+}
+
+message FilterBlockIndexByFiberSortColParam {
+    DbNameParam database = 1;
+    TblNameParam table = 2;
+    FiberValueType value = 3;
+    int64 timeBegin = 4;
+    int64 timeEnd = 5;
+    int32 sortColumnId = 6;
 }
 
 message DbParamParam {

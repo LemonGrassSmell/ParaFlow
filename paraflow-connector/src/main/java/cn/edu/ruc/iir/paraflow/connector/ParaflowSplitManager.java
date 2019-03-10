@@ -96,6 +96,7 @@ implements ConnectorSplitManager
             TupleDomain<ColumnHandle> predicates = predicatesOptional.get();
             ColumnHandle fiberCol = layout.getFiberColumn();
             ColumnHandle timeCol = layout.getTimestampColumn();
+            ColumnHandle sortCol = layout.getSortColumn();
             Optional<Map<ColumnHandle, Domain>> domains = predicates.getDomains();
             if (!domains.isPresent()) {
                 files = fsFactory.listFiles(new Path(tablePath));
@@ -103,6 +104,8 @@ implements ConnectorSplitManager
             else {
                 int fiber = -1;
                 int fiberId = -1;
+                int sortColumn = -1;
+                int sortColumnId = -1;
                 long timeLow = -1L;
                 long timeHigh = -1L;
                 if (domains.get().containsKey(fiberCol)) {
@@ -145,7 +148,11 @@ implements ConnectorSplitManager
                         }
                     }
                 }
-                if (fiber == -1 && timeLow == -1L && timeHigh == -1L) {
+                if (domains.get().containsKey(sortCol)) { //1、domains里面的值是怎么获得的，如何知道fiber，time，sort之类的信息
+                    //查询条件中所涉及的列是否有排序的column，若有，记下该column的编号，以备过滤时使用,参考fiber的处理
+                }
+
+                if (fiber == -1 && timeLow == -1L && timeHigh == -1L && sortColumn == -1) {
                     files = fsFactory.listFiles(new Path(tablePath));
                 }
                 else {
@@ -154,7 +161,8 @@ implements ConnectorSplitManager
                             tblName,
                             fiberId,
                             timeLow,
-                            timeHigh)
+                            timeHigh,
+                            sortColumnId)
                             .stream().map(Path::new).collect(Collectors.toList());         // filter file paths with fiber domains and time domains using meta server
                 }
             }

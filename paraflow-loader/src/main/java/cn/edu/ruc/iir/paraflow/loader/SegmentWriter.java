@@ -48,9 +48,9 @@ public abstract class SegmentWriter
         // generate file path
         String db = segment.getDb();
         String table = segment.getTable();
-        String path = config.getMemoryWarehouse() + db + "/" + table + "/"
-                + config.getLoaderId() + System.nanoTime() + random.nextInt();
-        segment.setPath(path);
+//        String path = config.getMemoryWarehouse() + db + "/" + table + "/"
+//                + config.getLoaderId() + System.nanoTime() + random.nextInt();
+//        segment.setPath(path);
         // get metadata
         String key = db + "-" + table;
         MetaProto.StringListType columnNames;

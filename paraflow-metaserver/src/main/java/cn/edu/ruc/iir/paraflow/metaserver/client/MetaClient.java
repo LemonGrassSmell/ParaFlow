@@ -616,6 +616,7 @@ public class MetaClient
                                                  int value,
                                                  long timeBegin,
                                                  long timeEnd,
+                                                 int sortColumnId,
                                                  String path)
     {
         StatusProto.ResponseStatus status;
@@ -635,6 +636,7 @@ public class MetaClient
                     .setTimeBegin(timeBegin)
                     .setTimeEnd(timeEnd)
                     .setBlockPath(path)
+                    .setSortColumnId(sortColumnId)
                     .build();
             try {
                 status = metaBlockingStub.createBlockIndex(blockIndex);
@@ -723,6 +725,77 @@ public class MetaClient
                 .build();
         try {
             stringList = metaBlockingStub.filterBlockIndexByFiber(filterBlockIndexByFiber);
+        }
+        catch (StatusRuntimeException e) {
+            logger.warn("RPC failed: " + e.getStatus());
+            stringList = MetaProto.StringListType.newBuilder().build();
+            return stringList;
+        }
+        logger.debug("Filter block paths is : " + stringList);
+        return stringList;
+    }
+
+    public MetaProto.StringListType filterBlockIndexBySortCol(String dbName,
+                                                            String tblName,
+                                                            long timeBegin,
+                                                            long timeEnd,
+                                                            int sortColumnId)
+    {
+        MetaProto.StringListType stringList;
+        MetaProto.DbNameParam databaseName = MetaProto.DbNameParam.newBuilder()
+                .setDatabase(dbName)
+                .build();
+        MetaProto.TblNameParam tableName = MetaProto.TblNameParam.newBuilder()
+                .setTable(tblName)
+                .build();
+        MetaProto.FilterBlockIndexBySortColParam filterBlockIndexBySortCol
+                = MetaProto.FilterBlockIndexBySortColParam.newBuilder()//修改metaproto相关内容
+                .setDatabase(databaseName)
+                .setTable(tableName)
+                .setTimeBegin(timeBegin)
+                .setTimeEnd(timeEnd)
+                .setSortColumnId(sortColumnId)
+                .build();
+        try {
+            stringList = metaBlockingStub.filterBlockIndexBySortCol(filterBlockIndexBySortCol);
+        }
+        catch (StatusRuntimeException e) {
+            logger.warn("RPC failed: " + e.getStatus());
+            stringList = MetaProto.StringListType.newBuilder().build();
+            return stringList;
+        }
+        logger.debug("Filter block paths is : " + stringList);
+        return stringList;
+    }
+
+    public MetaProto.StringListType filterBlockIndexByFiberSortCol(String dbName,
+                                                              String tblName,
+                                                              int value,
+                                                              long timeBegin,
+                                                              long timeEnd,
+                                                              int sortColumnId)
+    {
+        MetaProto.StringListType stringList;
+        MetaProto.DbNameParam databaseName = MetaProto.DbNameParam.newBuilder()
+                .setDatabase(dbName)
+                .build();
+        MetaProto.TblNameParam tableName = MetaProto.TblNameParam.newBuilder()
+                .setTable(tblName)
+                .build();
+        MetaProto.FiberValueType fiberValue = MetaProto.FiberValueType.newBuilder()
+                .setValue(value)
+                .build();
+        MetaProto.FilterBlockIndexByFiberSortColParam filterBlockIndexByFiberSortCol
+                = MetaProto.FilterBlockIndexByFiberSortColParam.newBuilder()//修改metaproto相关内容
+                .setDatabase(databaseName)
+                .setTable(tableName)
+                .setValue(fiberValue)
+                .setTimeBegin(timeBegin)
+                .setTimeEnd(timeEnd)
+                .setSortColumnId(sortColumnId)
+                .build();
+        try {
+            stringList = metaBlockingStub.filterBlockIndexByFiberSortCol(filterBlockIndexByFiberSortCol);
         }
         catch (StatusRuntimeException e) {
             logger.warn("RPC failed: " + e.getStatus());

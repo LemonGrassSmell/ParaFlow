@@ -25,6 +25,8 @@ import cn.edu.ruc.iir.paraflow.metaserver.action.DeleteTblParamAction;
 import cn.edu.ruc.iir.paraflow.metaserver.action.DeleteTblPrivAction;
 import cn.edu.ruc.iir.paraflow.metaserver.action.FilterBlockIndexAction;
 import cn.edu.ruc.iir.paraflow.metaserver.action.FilterBlockIndexByFiberAction;
+import cn.edu.ruc.iir.paraflow.metaserver.action.FilterBlockIndexByFiberSortColAction;
+import cn.edu.ruc.iir.paraflow.metaserver.action.FilterBlockIndexBySortColAction;
 import cn.edu.ruc.iir.paraflow.metaserver.action.GetColumnAction;
 import cn.edu.ruc.iir.paraflow.metaserver.action.GetColumnNameAction;
 import cn.edu.ruc.iir.paraflow.metaserver.action.GetDatabaseAction;
@@ -830,6 +832,78 @@ public class MetaService extends MetaGrpc.MetaImplBase
             txController.addAction(new GetDatabaseIdAction());
             txController.addAction(new GetTableIdAction());
             txController.addAction(new FilterBlockIndexByFiberAction());
+            ActionResponse result = txController.commit(input);
+            MetaProto.StringListType stringListType
+                    = (MetaProto.StringListType) result.getParam().get();
+            responseStreamObserver.onNext(stringListType);
+            responseStreamObserver.onCompleted();
+        }
+        catch (ParaFlowException e) {
+            MetaProto.StringListType stringListType = MetaProto.StringListType.newBuilder()
+                    .setIsEmpty(true)
+                    .build();
+            responseStreamObserver.onNext(stringListType);
+            responseStreamObserver.onCompleted();
+            e.handle();
+        }
+        finally {
+            if (txController != null) {
+                txController.close();
+            }
+        }
+    }
+
+    @Override
+    public void filterBlockIndexBySortCol(MetaProto.FilterBlockIndexBySortColParam filterBlockIndexBySortCol,
+                                 StreamObserver<MetaProto.StringListType> responseStreamObserver)
+    {
+        TransactionController txController = null;
+        try {
+            txController = ConnectionPool.INSTANCE().getTxController();
+            ActionResponse input = new ActionResponse();
+            input.setParam(filterBlockIndexBySortCol);
+            input.setProperties("dbName", filterBlockIndexBySortCol.getDatabase().getDatabase());
+            input.setProperties("tblName", filterBlockIndexBySortCol.getTable().getTable());
+            txController.setAutoCommit(true);
+            txController.addAction(new GetDatabaseIdAction());
+            txController.addAction(new GetTableIdAction());
+            txController.addAction(new FilterBlockIndexBySortColAction());
+            ActionResponse result = txController.commit(input);
+            MetaProto.StringListType stringListType
+                    = (MetaProto.StringListType) result.getParam().get();
+            responseStreamObserver.onNext(stringListType);
+            responseStreamObserver.onCompleted();
+        }
+        catch (ParaFlowException e) {
+            MetaProto.StringListType stringListType = MetaProto.StringListType.newBuilder()
+                    .setIsEmpty(true)
+                    .build();
+            responseStreamObserver.onNext(stringListType);
+            responseStreamObserver.onCompleted();
+            e.handle();
+        }
+        finally {
+            if (txController != null) {
+                txController.close();
+            }
+        }
+    }
+
+    @Override
+    public void filterBlockIndexByFiberSortCol(MetaProto.FilterBlockIndexByFiberSortColParam filterBlockIndexByFiberSortCol,
+                                        StreamObserver<MetaProto.StringListType> responseStreamObserver)
+    {
+        TransactionController txController = null;
+        try {
+            txController = ConnectionPool.INSTANCE().getTxController();
+            ActionResponse input = new ActionResponse();
+            input.setParam(filterBlockIndexByFiberSortCol);
+            input.setProperties("dbName", filterBlockIndexByFiberSortCol.getDatabase().getDatabase());
+            input.setProperties("tblName", filterBlockIndexByFiberSortCol.getTable().getTable());
+            txController.setAutoCommit(true);
+            txController.addAction(new GetDatabaseIdAction());
+            txController.addAction(new GetTableIdAction());
+            txController.addAction(new FilterBlockIndexByFiberSortColAction());
             ActionResponse result = txController.commit(input);
             MetaProto.StringListType stringListType
                     = (MetaProto.StringListType) result.getParam().get();

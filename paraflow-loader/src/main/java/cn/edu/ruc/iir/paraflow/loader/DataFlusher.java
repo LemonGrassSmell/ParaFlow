@@ -74,6 +74,9 @@ public class DataFlusher
         int fileNamePoint = segmentPath.lastIndexOf("/");
         int tblPoint = segmentPath.lastIndexOf("/", fileNamePoint - 1);
         int dbPoint = segmentPath.lastIndexOf("/", tblPoint - 1);
+        int indexEndPoint = segmentPath.lastIndexOf("i");
+        int indexStartPoint = segmentPath.lastIndexOf("i", indexEndPoint - 1);
+        int sortColumnId = Integer.parseInt(segmentPath.substring(indexStartPoint + 1, indexEndPoint));
         String suffix = segmentPath.substring(dbPoint + 1);
         String newPath = config.getHDFSWarehouse() + suffix;
         Path outputPath = new Path(newPath);
@@ -92,7 +95,7 @@ public class DataFlusher
                 if (fiberMaxTimestamps[i] == -1) {
                     continue;
                 }
-                metaClient.createBlockIndex(db, table, i + partitionFrom, fiberMinTimestamps[i], fiberMaxTimestamps[i], newPath);
+                metaClient.createBlockIndex(db, table, i + partitionFrom, fiberMinTimestamps[i], fiberMaxTimestamps[i], sortColumnId, newPath);
             }
             double writeLatency = Math.abs(writeTime - segment.getAvgTimestamp());
 //            double flushLatency = Math.abs(System.currentTimeMillis() - segment.getAvgTimestamp());

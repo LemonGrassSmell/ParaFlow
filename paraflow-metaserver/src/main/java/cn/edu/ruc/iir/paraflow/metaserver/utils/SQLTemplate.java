@@ -286,6 +286,26 @@ public class SQLTemplate
         return String.format("DELETE FROM meta_dbparammodel WHERE dbid = %d;", dbId);
     }
 
+    public static String filterBlockIndexBySortColBeginEnd(long tblId, int sortColumnId, long timeBegin, long timeEnd)
+    {
+        return String.format("SELECT DISTINCT blockPath FROM meta_blockindex WHERE tblid = %d AND sortcolumnid = %d AND (timeBegin < %d OR timeEnd > %d);", tblId, sortColumnId, timeEnd, timeBegin);
+    }
+
+    public static String filterBlockIndexBySortColBegin(long tblId, int sortColumnId, long timeBegin)
+    {
+        return String.format("SELECT DISTINCT blockPath FROM meta_blockindex WHERE tblid = %d AND sortcolumnid = %d AND timeEnd > %d;", tblId, sortColumnId, timeBegin);
+    }
+
+    public static String filterBlockIndexBySortColEnd(long tblId, int sortColumnId, long timeEnd)
+    {
+        return String.format("SELECT DISTINCT blockPath FROM meta_blockindex WHERE tblid = %d AND sortcolumnid = %d AND timeBegin < %d;", tblId, sortColumnId, timeEnd);
+    }
+
+    public static String filterBlockIndexBySortCol(long tblId, int sortColumnId)
+    {
+        return String.format("SELECT DISTINCT blockPath FROM meta_blockindex WHERE tblid = %d AND sortcolumnid = %d;", tblId, sortColumnId);
+    }
+
     public static String filterBlockIndexBeginEnd(long tblId, long timeBegin, long timeEnd)
     {
         return String.format("SELECT DISTINCT blockPath FROM meta_blockindex WHERE tblid = %d AND (timeBegin < %d OR timeEnd > %d);", tblId, timeEnd, timeBegin);
@@ -324,6 +344,26 @@ public class SQLTemplate
     public static String filterBlockIndexByFiber(long tblId, long value)
     {
         return String.format("SELECT DISTINCT blockPath FROM meta_blockindex WHERE tblid = %d AND fiberValue = %d;", tblId, value);
+    }
+
+    public static String filterBlockIndexByFiberSortColBeginEnd(long tblId, long value, int sortColumnId, long timeBegin, long timeEnd)
+    {
+        return String.format("SELECT DISTINCT blockPath FROM meta_blockindex WHERE tblid = %d AND fiberValue = %d AND sortcolumnid = %d AND (timeBegin < %d OR timeEnd > %d);", tblId, value, sortColumnId, timeEnd, timeBegin);
+    }
+
+    public static String filterBlockIndexByFiberSortColBegin(long tblId, long value, int sortColumnId, long timeBegin)
+    {
+        return String.format("SELECT DISTINCT blockPath FROM meta_blockindex WHERE tblid = %d AND fiberValue = %d AND sortcolumnid = %d AND timeEnd > %d;", tblId, value, sortColumnId, timeBegin);
+    }
+
+    public static String filterBlockIndexByFiberSortColEnd(long tblId, long value, int sortColumnId, long timeEnd)
+    {
+        return String.format("SELECT DISTINCT blockPath FROM meta_blockindex WHERE tblid = %d AND fiberValue = %d AND sortcolumnid = %d AND timeBegin < %d;", tblId, value, sortColumnId, timeEnd);
+    }
+
+    public static String filterBlockIndexByFiberSortCol(long tblId, long value, int sortColumnId)
+    {
+        return String.format("SELECT DISTINCT blockPath FROM meta_blockindex WHERE tblid = %d AND fiberValue = %d AND sortcolumnid = %d;", tblId, value, sortColumnId);
     }
 
     public static String createTblFunc(long tblId, long funcId)
