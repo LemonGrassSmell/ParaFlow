@@ -63,10 +63,9 @@ public class DataCompactor
                 }
                 tempBuffer[partition].addAll(Arrays.asList(sortedRecords));
                 recordNum += sortedRecords.length;
-                if (recordNum >= threshold) {
+                if (recordNum >= threshold) { //不是所有的block都会压缩？
                     // compact
                     ParaflowSegment segment = compact(index);
-                    index++;
                     segment.setDb(db);
                     segment.setTable(table);
                     String path = config.getMemoryWarehouse() + db + "/" + table + "/" + "i" + index + "i"
@@ -75,6 +74,7 @@ public class DataCompactor
                     while (!segmentContainer.addSegment(segment)) {
                         Thread.yield();
                     }
+                    index++;
                 }
             }
         }
@@ -96,21 +96,95 @@ public class DataCompactor
                 if (index % 6 == 0) {
                     tempBuffer[i].sort(Comparator.comparingLong(ParaflowRecord::getTimestamp));
                 }
-//                else if (index % 6 == 1){
-//                    tempBuffer[i].sort(Comparator.comparingDouble(Double.parseDouble(ParaflowRecord::getValue(3))));
-//                }
-//                else if(index % 6 == 2){
-//                    tempBuffer[i].sort(Comparator.comparingDouble(Double.parseDouble(ParaflowRecord::getValue(11))));
-//                }
-//                else if(index % 6 == 3){
-//                    tempBuffer[i].sort(Comparator.comparingDouble(Double.parseDouble(ParaflowRecord::getValue(12))));
-//                }
-//                else if(index % 6 == 4){
-//                    tempBuffer[i].sort(Comparator.comparingDouble(Double.parseDouble(ParaflowRecord::getValue(13))));
-//                }
-//                else if(index % 6 == 5){
-//                    tempBuffer[i].sort(Comparator.comparingDouble(Double.parseDouble(ParaflowRecord::getValue(14))));
-//                }
+                else if (index % 6 == 1) {
+                    tempBuffer[i].sort(new Comparator<ParaflowRecord>() {
+                        @Override
+                        public int compare(ParaflowRecord o1, ParaflowRecord o2)
+                        {
+                            double totalPrice1 = Double.parseDouble(o1.getValue(3).toString());
+                            double totalPrice2 = Double.parseDouble(o2.getValue(3).toString());
+                            if (totalPrice1 > totalPrice2) {
+                                return 1;
+                            }
+                            if (totalPrice1 < totalPrice2) {
+                                return -1;
+                            }
+                            return 0;
+                        }
+                    });
+                }
+                else if (index % 6 == 2) {
+                    tempBuffer[i].sort(new Comparator<ParaflowRecord>()
+                    {
+                        @Override
+                        public int compare(ParaflowRecord o1, ParaflowRecord o2)
+                        {
+                            double totalPrice1 = Double.parseDouble(o1.getValue(10).toString());
+                            double totalPrice2 = Double.parseDouble(o2.getValue(10).toString());
+                            if (totalPrice1 > totalPrice2) {
+                                return 1;
+                            }
+                            if (totalPrice1 < totalPrice2) {
+                                return -1;
+                            }
+                            return 0;
+                        }
+                    });
+                }
+                else if (index % 6 == 3) {
+                    tempBuffer[i].sort(new Comparator<ParaflowRecord>()
+                    {
+                        @Override
+                        public int compare(ParaflowRecord o1, ParaflowRecord o2)
+                        {
+                            double totalPrice1 = Double.parseDouble(o1.getValue(11).toString());
+                            double totalPrice2 = Double.parseDouble(o2.getValue(11).toString());
+                            if (totalPrice1 > totalPrice2) {
+                                return 1;
+                            }
+                            if (totalPrice1 < totalPrice2) {
+                                return -1;
+                            }
+                            return 0;
+                        }
+                    });
+                }
+                else if (index % 6 == 4) {
+                    tempBuffer[i].sort(new Comparator<ParaflowRecord>()
+                    {
+                        @Override
+                        public int compare(ParaflowRecord o1, ParaflowRecord o2)
+                        {
+                            double totalPrice1 = Double.parseDouble(o1.getValue(12).toString());
+                            double totalPrice2 = Double.parseDouble(o2.getValue(12).toString());
+                            if (totalPrice1 > totalPrice2) {
+                                return 1;
+                            }
+                            if (totalPrice1 < totalPrice2) {
+                                return -1;
+                            }
+                            return 0;
+                        }
+                    });
+                }
+                else if (index % 6 == 5) {
+                    tempBuffer[i].sort(new Comparator<ParaflowRecord>()
+                    {
+                        @Override
+                        public int compare(ParaflowRecord o1, ParaflowRecord o2)
+                        {
+                            double totalPrice1 = Double.parseDouble(o1.getValue(13).toString());
+                            double totalPrice2 = Double.parseDouble(o2.getValue(13).toString());
+                            if (totalPrice1 > totalPrice2) {
+                                return 1;
+                            }
+                            if (totalPrice1 < totalPrice2) {
+                                return -1;
+                            }
+                            return 0;
+                        }
+                    });
+                }
                 int tempSize = tempBuffer[i].size();
                 ParaflowRecord[] tempRecords = new ParaflowRecord[tempSize];
                 tempBuffer[i].toArray(tempRecords);

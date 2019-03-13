@@ -37,7 +37,6 @@ implements ConnectorTableLayoutHandle
     private final ParaflowTableHandle table;
     private final ParaflowColumnHandle fiberColumn;
     private final ParaflowColumnHandle timestampColumn;
-    private final ParaflowColumnHandle sortColumn;
     private final String fiberPartitioner;
     private final StorageFormat storageFormat;
     private Optional<TupleDomain<ColumnHandle>> predicates;
@@ -45,7 +44,6 @@ implements ConnectorTableLayoutHandle
     public ParaflowTableLayoutHandle(ParaflowTableHandle table)
     {
         this(table,
-                new ParaflowColumnHandle("null", IntegerType.INTEGER, "", ParaflowColumnHandle.ColumnType.REGULAR, ""),
                 new ParaflowColumnHandle("null", IntegerType.INTEGER, "", ParaflowColumnHandle.ColumnType.REGULAR, ""),
                 new ParaflowColumnHandle("null", IntegerType.INTEGER, "", ParaflowColumnHandle.ColumnType.REGULAR, ""),
                 "",
@@ -58,7 +56,6 @@ implements ConnectorTableLayoutHandle
             @JsonProperty("table") ParaflowTableHandle table,
             @JsonProperty("fiberColumn") ParaflowColumnHandle fiberColumn,
             @JsonProperty("timestampColumn") ParaflowColumnHandle timestampColumn,
-            @JsonProperty("sortColumn") ParaflowColumnHandle sortColumn,
             @JsonProperty("fiberPartitioner") String fiberPartitioner,
             @JsonProperty("storageFormat") StorageFormat storageFormat,
             @JsonProperty("predicates") Optional<TupleDomain<ColumnHandle>> predicates)
@@ -66,7 +63,6 @@ implements ConnectorTableLayoutHandle
         this.table = requireNonNull(table, "table is null");
         this.fiberColumn = requireNonNull(fiberColumn, "fiberColumn is null");
         this.timestampColumn = requireNonNull(timestampColumn, "timestampColumn is null");
-        this.sortColumn = requireNonNull(sortColumn, "sortColumn is null");
         this.fiberPartitioner = requireNonNull(fiberPartitioner, "fiberPartitioner is null");
         this.storageFormat = requireNonNull(storageFormat, "storageFormat is null");
         this.predicates = requireNonNull(predicates, "predicates is null");
@@ -94,12 +90,6 @@ implements ConnectorTableLayoutHandle
     public ParaflowColumnHandle getTimestampColumn()
     {
         return timestampColumn;
-    }
-
-    @JsonProperty
-    public ParaflowColumnHandle getSortColumn()
-    {
-        return sortColumn;
     }
 
     @JsonProperty

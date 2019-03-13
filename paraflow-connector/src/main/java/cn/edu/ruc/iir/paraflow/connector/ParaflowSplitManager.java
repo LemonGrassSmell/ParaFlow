@@ -43,6 +43,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static cn.edu.ruc.iir.paraflow.connector.Types.checkType;
@@ -96,7 +97,12 @@ implements ConnectorSplitManager
             TupleDomain<ColumnHandle> predicates = predicatesOptional.get();
             ColumnHandle fiberCol = layout.getFiberColumn();
             ColumnHandle timeCol = layout.getTimestampColumn();
-            ColumnHandle sortCol = layout.getSortColumn();
+//            Map<String, Integer> sortColumns = new HashMap<>();
+//            sortColumns.put("lo_totalprice", 1);
+//            sortColumns.put("lo_quantity", 2);
+//            sortColumns.put("lo_extendedprice", 3);
+//            sortColumns.put("lo_discount", 4);
+//            sortColumns.put("lo_tax", 5);
             Optional<Map<ColumnHandle, Domain>> domains = predicates.getDomains();
             if (!domains.isPresent()) {
                 files = fsFactory.listFiles(new Path(tablePath));
@@ -104,10 +110,11 @@ implements ConnectorSplitManager
             else {
                 int fiber = -1;
                 int fiberId = -1;
-                int sortColumn = -1;
-                int sortColumnId = -1;
+//                int sortColumnId = -1;
                 long timeLow = -1L;
                 long timeHigh = -1L;
+                Set<ColumnHandle> keys = domains.get().keySet();
+                int keyscount = keys.size();
                 if (domains.get().containsKey(fiberCol)) {
                     // parse fiber domains
                     Domain fiberDomain = domains.get().get(fiberCol);
@@ -148,22 +155,34 @@ implements ConnectorSplitManager
                         }
                     }
                 }
-                if (domains.get().containsKey(sortCol)) { //1、domains里面的值是怎么获得的，如何知道fiber，time，sort之类的信息
-                    //查询条件中所涉及的列是否有排序的column，若有，记下该column的编号，以备过滤时使用,参考fiber的处理
-                }
-
-                if (fiber == -1 && timeLow == -1L && timeHigh == -1L && sortColumn == -1) {
+//                for(ColumnHandle key:keys){
+//                    key.g
+//                }
+                //若是聚合查询
+                // 若跳出循环
+                //   则用跳出循环时指示的那个列作为sortcolumnid，
+                // 若没有跳出循环
+                //   则用timestamp即index = 0作为sortcolumnid
+//                if (fiber == -1 && timeLow == -1L && timeHigh == -1L && sortColumn == -1) {
+                if (fiber == -1 && timeLow == -1L && timeHigh == -1L) {
                     files = fsFactory.listFiles(new Path(tablePath));
                 }
                 else {
+//                    files = metaDataQuery.filterBlocks(
+//                            dbName,
+//                            tblName,
+//                            fiberId,
+//                            timeLow,
+//                            timeHigh,
+//                            sortColumnId)
+//                            .stream().map(Path::new).collect(Collectors.toList());         // filter file paths with fiber domains and time domains using meta server
                     files = metaDataQuery.filterBlocks(
                             dbName,
                             tblName,
                             fiberId,
                             timeLow,
-                            timeHigh,
-                            sortColumnId)
-                            .stream().map(Path::new).collect(Collectors.toList());         // filter file paths with fiber domains and time domains using meta server
+                            timeHigh)
+                            .stream().map(Path::new).collect(Collectors.toList());
                 }
             }
         }
