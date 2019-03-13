@@ -427,9 +427,9 @@ public class MetaClient
     }
 
     public StatusProto.ResponseStatus renameColumn(String dbName,
-                                             String tblName,
-                                             String oleName,
-                                             String newName)
+                                                   String tblName,
+                                                   String oleName,
+                                                   String newName)
     {
         MetaProto.TblNameParam tableName = MetaProto.TblNameParam.newBuilder()
                 .setTable(tblName)
@@ -564,9 +564,9 @@ public class MetaClient
     }
 
     public StatusProto.ResponseStatus createTblParam(String dbName,
-                                               String tblName,
-                                               String paramKey,
-                                               String paramValue)
+                                                     String tblName,
+                                                     String paramKey,
+                                                     String paramValue)
     {
         StatusProto.ResponseStatus status;
         MetaProto.TblParamParam tblParam = MetaProto.TblParamParam.newBuilder()
@@ -588,9 +588,9 @@ public class MetaClient
     }
 
     public StatusProto.ResponseStatus createTblPriv(String dbName,
-                                              String tblName,
-                                              String userName,
-                                              int privType)
+                                                    String tblName,
+                                                    String userName,
+                                                    int privType)
     {
         StatusProto.ResponseStatus status;
         MetaProto.TblPrivParam tblPriv = MetaProto.TblPrivParam.newBuilder()
@@ -612,40 +612,40 @@ public class MetaClient
     }
 
     public StatusProto.ResponseStatus createBlockIndex(String dbName,
-                                                 String tblName,
-                                                 int value,
-                                                 long timeBegin,
-                                                 long timeEnd,
-                                                 int sortColumnId,
-                                                 String path)
+                                                       String tblName,
+                                                       int value,
+                                                       long timeBegin,
+                                                       long timeEnd,
+                                                       int sortColumnId,
+                                                       String path)
     {
         StatusProto.ResponseStatus status;
-            MetaProto.DbNameParam databaseName = MetaProto.DbNameParam.newBuilder()
-                    .setDatabase(dbName)
-                    .build();
-            MetaProto.TblNameParam tableName = MetaProto.TblNameParam.newBuilder()
-                    .setTable(tblName)
-                    .build();
-            MetaProto.FiberValueType fiberValue = MetaProto.FiberValueType.newBuilder()
-                    .setValue(value)
-                    .build();
-            MetaProto.BlockIndexParam blockIndex = MetaProto.BlockIndexParam.newBuilder()
-                    .setDatabase(databaseName)
-                    .setTable(tableName)
-                    .setValue(fiberValue)
-                    .setTimeBegin(timeBegin)
-                    .setTimeEnd(timeEnd)
-                    .setBlockPath(path)
-                    .setSortColumnId(sortColumnId)
-                    .build();
-            try {
-                status = metaBlockingStub.createBlockIndex(blockIndex);
-            }
-            catch (StatusRuntimeException e) {
-                logger.warn("RPC failed: " + e.getStatus());
-                status = StatusProto.ResponseStatus.newBuilder().build();
-                return status;
-            }
+        MetaProto.DbNameParam databaseName = MetaProto.DbNameParam.newBuilder()
+                .setDatabase(dbName)
+                .build();
+        MetaProto.TblNameParam tableName = MetaProto.TblNameParam.newBuilder()
+                .setTable(tblName)
+                .build();
+        MetaProto.FiberValueType fiberValue = MetaProto.FiberValueType.newBuilder()
+                .setValue(value)
+                .build();
+        MetaProto.BlockIndexParam blockIndex = MetaProto.BlockIndexParam.newBuilder()
+                .setDatabase(databaseName)
+                .setTable(tableName)
+                .setValue(fiberValue)
+                .setTimeBegin(timeBegin)
+                .setTimeEnd(timeEnd)
+                .setBlockPath(path)
+                .setSortColumnId(sortColumnId)
+                .build();
+        try {
+            status = metaBlockingStub.createBlockIndex(blockIndex);
+        }
+        catch (StatusRuntimeException e) {
+            logger.warn("RPC failed: " + e.getStatus());
+            status = StatusProto.ResponseStatus.newBuilder().build();
+            return status;
+        }
         logger.debug("Create block index status is : " + status.getStatus());
         return status;
     }
@@ -736,10 +736,10 @@ public class MetaClient
     }
 
     public MetaProto.StringListType filterBlockIndexBySortCol(String dbName,
-                                                            String tblName,
-                                                            long timeBegin,
-                                                            long timeEnd,
-                                                            int sortColumnId)
+                                                              String tblName,
+                                                              long timeBegin,
+                                                              long timeEnd,
+                                                              int sortColumnId)
     {
         MetaProto.StringListType stringList;
         MetaProto.DbNameParam databaseName = MetaProto.DbNameParam.newBuilder()
@@ -769,11 +769,11 @@ public class MetaClient
     }
 
     public MetaProto.StringListType filterBlockIndexByFiberSortCol(String dbName,
-                                                              String tblName,
-                                                              int value,
-                                                              long timeBegin,
-                                                              long timeEnd,
-                                                              int sortColumnId)
+                                                                   String tblName,
+                                                                   int value,
+                                                                   long timeBegin,
+                                                                   long timeEnd,
+                                                                   int sortColumnId)
     {
         MetaProto.StringListType stringList;
         MetaProto.DbNameParam databaseName = MetaProto.DbNameParam.newBuilder()

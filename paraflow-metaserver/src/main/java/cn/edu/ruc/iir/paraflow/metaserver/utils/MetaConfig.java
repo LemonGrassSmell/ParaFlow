@@ -11,6 +11,7 @@ import cn.edu.ruc.iir.paraflow.commons.utils.ParaFlowConfig;
 public class MetaConfig
 {
     private ParaFlowConfig paraflowConfig;
+    int serverPort;
 
     public MetaConfig()
     {}

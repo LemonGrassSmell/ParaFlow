@@ -26,7 +26,6 @@ public final class MetaConstants
     public static final StatusProto.ResponseStatus OKStatus = StatusProto.ResponseStatus.newBuilder()
             .setStatus(StatusProto.ResponseStatus.State.STATUS_OK)
             .build();
-
     // default values
     public static final String defaultUserName = "default";
     private static final String defaultUserPass = "";
