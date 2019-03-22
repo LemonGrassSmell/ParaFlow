@@ -70,7 +70,6 @@ public class SQLTemplate
 
     public static String getTable(long dbId, String tblName)
     {
-
         return String.format("SELECT tblid,userid,createtime,lastaccesstime,locationurl,storageformat,fibercolid,timecolid,fiberfunc FROM meta_tblmodel WHERE dbid = %d AND tblname = '%s';",
                 dbId,
                 tblName);
