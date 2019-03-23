@@ -36,7 +36,7 @@ public class TestMetaClient
     public void step02_ClientCreateDatabaseTest()
     {
         StatusProto.ResponseStatus expect = StatusProto.ResponseStatus.newBuilder().setStatus(StatusProto.ResponseStatus.State.STATUS_OK).build();
-        StatusProto.ResponseStatus status = client.createDatabase("test", "hdfs://127.0.0.1:5432/paraflow/test", "paraflow");
+        StatusProto.ResponseStatus status = client.createDatabase("metadata", "hdfs://127.0.0.1:5432/paraflow/test", "paraflow");
         assertEquals(expect, status);
     }
 
@@ -60,7 +60,7 @@ public class TestMetaClient
         dataType.add("varchar(20)");
         dataType.add("int");
         dataType.add("varchar(20)");
-        StatusProto.ResponseStatus status = client.createTable("regular", "noodles", "text", columnName, dataType);
+        StatusProto.ResponseStatus status = client.createTable("metadata", "noodles", "text", columnName, dataType);
         assertEquals(expect, status);
     }
 

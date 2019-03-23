@@ -97,7 +97,7 @@ public class DefaultLoader
         // init segment container
         BlockingQueue<ParaflowSegment> flushingQueue =
                 new PushPullBlockingQueue<>(config.getFlushingCapacity(), SpinPolicy.SPINNING);
-        SegmentContainer.INSTANCE().init(config.getContainerCapacity(), partitionFrom, partitionTo,
+        SegmentContainer.INSTANCE().init(config.getContainerCapacity(),
                                          flushingQueue, pipeline.getExecutorService(), metaClient);
         // add a data compactor
         DataCompactor dataCompactor = new DataCompactor("compactor", db, table, 1, config.getCompactorThreshold(),

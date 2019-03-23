@@ -76,6 +76,7 @@ public class ParquetSegmentWriter
         GroupWriteSupport.setSchema(schema, configuration);
         CompressionCodecName compressionCodecName;
         String compressionCodecStr = config.getParquetCompressionCodec();
+        //String compressionCodecStr = "snappy";
         switch (compressionCodecStr.toLowerCase()) {
             case "gzip":
                 compressionCodecName = CompressionCodecName.GZIP;

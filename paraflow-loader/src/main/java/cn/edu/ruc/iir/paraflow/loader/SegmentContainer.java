@@ -23,8 +23,6 @@ class SegmentContainer
     private ExecutorService executorService;
     private MetaClient metaClient;
     private int capacity;
-    private int partitionFrom;
-    private int partitionTo;
     private BlockingQueue<ParaflowSegment> flushingQueue;
 
     private SegmentContainer()
@@ -41,15 +39,13 @@ class SegmentContainer
         return SegmentContainerHolder.instance;
     }
 
-    synchronized void init(int capacity, int partitionFrom, int partitionTo,
+    synchronized void init(int capacity,
                            BlockingQueue<ParaflowSegment> flushingQueue, ExecutorService executorService, MetaClient metaClient)
     {
         if (initialized.get()) {
             return;
         }
         this.capacity = capacity;
-        this.partitionFrom = partitionFrom;
-        this.partitionTo = partitionTo;
         this.flushingQueue = flushingQueue;
         this.executorService = executorService;
         this.metaClient = metaClient;
