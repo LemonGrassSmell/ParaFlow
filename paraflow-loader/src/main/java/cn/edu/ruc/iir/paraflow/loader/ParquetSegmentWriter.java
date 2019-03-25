@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 /**
@@ -40,6 +41,8 @@ public class ParquetSegmentWriter
     {
         // construct schema
         int columnNum = columnTypes.getStrCount();
+        Map<Integer, Integer> fiberCount = segment.getfiberCount();
+        int partitionNum = segment.getFiberMaxTimestamps().length;
         StringBuilder schemaBuilder = new StringBuilder("message " + segment.getTable() + " {");
         for (int i = 0; i < columnNum; i++) {
             switch (columnTypes.getStr(i)) {
@@ -97,12 +100,16 @@ public class ParquetSegmentWriter
                 config.getParquetDictionaryPageSize(), config.isParquetDictionaryEnabled(), config.isParquetValidating(),
                 ParquetProperties.WriterVersion.PARQUET_2_0, configuration)) {
             ParaflowRecord[][] content = segment.getRecords();
-            for (ParaflowRecord[] partitionContent : content) {
+            ParaflowRecord[] partitionContent;
+            ParaflowRecord record;
+            for (int j = 0; j < partitionNum; j++) {
+                partitionContent = content[j];
                 // skip null partition
                 if (partitionContent == null) {
                     continue;
                 }
-                for (ParaflowRecord record : partitionContent) {
+                for (int i = 0; i < fiberCount.get(j); i++) {
+                    record = partitionContent[i];
                     Group group = groupFactory.newGroup();
                     for (int k = 0; k < columnNum; k++) {
                         switch (columnTypes.getStr(k)) {

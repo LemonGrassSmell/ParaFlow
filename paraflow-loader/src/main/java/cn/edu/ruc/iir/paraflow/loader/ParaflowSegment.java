@@ -2,6 +2,8 @@ package cn.edu.ruc.iir.paraflow.loader;
 
 import cn.edu.ruc.iir.paraflow.commons.ParaflowRecord;
 
+import java.util.Map;
+
 /**
  * paraflow segment
  *
@@ -23,6 +25,7 @@ public class ParaflowSegment
     private long writeTime;
     private long flushTime;
     private volatile StorageLevel storageLevel;
+    private Map<Integer, Integer> fiberCount;
 
     public ParaflowSegment(ParaflowRecord[][] records, long[] fiberMinTimestamps, long[] fiberMaxTimestamps,
                            double avgTimestamp)
@@ -98,6 +101,25 @@ public class ParaflowSegment
     public long[] getFiberMinTimestamps()
     {
         return fiberMinTimestamps;
+    }
+
+    public void setFiberMaxTimestamps(long[] FiberMaxTimestamps)
+    {
+        this.fiberMaxTimestamps = FiberMaxTimestamps;
+    }
+
+    public void setFiberMinTimestamps(long[] FiberMinTimestamps)
+    {
+        this.fiberMinTimestamps = FiberMinTimestamps;
+    }
+    public Map<Integer, Integer> getfiberCount()
+    {
+        return fiberCount;
+    }
+
+    public void setfiberCount(Map<Integer, Integer> fiberCount)
+    {
+        this.fiberCount = fiberCount;
     }
 
     public double getAvgTimestamp()
