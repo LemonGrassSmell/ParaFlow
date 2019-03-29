@@ -734,6 +734,7 @@ public class MetaService extends MetaGrpc.MetaImplBase
             input.setParam(blockIndex);
             input.setProperties("dbName", blockIndex.getDatabase().getDatabase());
             input.setProperties("tblName", blockIndex.getTable().getTable());
+            input.setProperties("sortColId", blockIndex.getSortColumnId());
             txController.setAutoCommit(false);
             txController.addAction(new GetDatabaseIdAction());
             txController.addAction(new GetTableIdAction());

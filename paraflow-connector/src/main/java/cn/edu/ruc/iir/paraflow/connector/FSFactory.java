@@ -20,7 +20,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import io.airlift.log.Logger;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocalFileSystem;
@@ -94,22 +93,25 @@ public final class FSFactory
     public List<HostAddress> getBlockLocations(Path file, long start, long len)
     {
         Set<HostAddress> addresses = new HashSet<>();
-        BlockLocation[] locations = new BlockLocation[0];
-        try {
-            locations = this.fileSystem.getFileBlockLocations(file, start, len);
-        }
-        catch (IOException e) {
-            log.error(e);
-        }
-        assert locations.length <= 1;
-        for (BlockLocation location : locations) {
-            try {
-                addresses.addAll(toHostAddress(location.getHosts()));
-            }
-            catch (IOException e) {
-                log.error(e);
-            }
-        }
+//        BlockLocation[] locations = new BlockLocation[0];
+        String[] hosts = new String[1];
+        hosts[0] = "10.77.40.130";
+//        try {
+//            locations = this.fileSystem.getFileBlockLocations(file, start, len);
+//        }
+//        catch (IOException e) {
+//            log.error(e);
+//        }
+//        assert locations.length <= 1;
+//        for (BlockLocation location : locations) {
+//            try {
+//                addresses.addAll(toHostAddress(location.getHosts()));
+                addresses.addAll(toHostAddress(hosts));
+//            }
+//            catch (IOException e) {
+//                log.error(e);
+//            }
+//        }
         return new ArrayList<>(addresses);
     }
 

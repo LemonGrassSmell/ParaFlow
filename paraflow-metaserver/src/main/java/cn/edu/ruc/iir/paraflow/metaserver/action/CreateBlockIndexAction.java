@@ -31,16 +31,21 @@ public class CreateBlockIndexAction
     {
         Optional<Object> paramOp = input.getParam();
         Optional<Object> tblIdOp = input.getProperties("tblId");
-        if (paramOp.isPresent() && tblIdOp.isPresent()) {
+        Optional<Object> sortColumnId = input.getProperties("sortColId");
+        if (paramOp.isPresent() && tblIdOp.isPresent() && sortColumnId.isPresent()) {
             MetaProto.BlockIndexParam blockIndex
                     = (MetaProto.BlockIndexParam) paramOp.get();
             long tblId = (long) tblIdOp.get();
+            int sortColId = (int) sortColumnId.get();
+            System.out.println("============================");
+            System.out.println("sortColId = " + sortColId);
             String userStatement = SQLTemplate.createBlockIndex(
                     tblId,
                     blockIndex.getValue().getValue(),
                     blockIndex.getTimeBegin(),
                     blockIndex.getTimeEnd(),
                     blockIndex.getTimeZone(),
+                    sortColId,
                     blockIndex.getBlockPath());
             int status = connection.executeUpdate(userStatement);
             if (status == 0) {

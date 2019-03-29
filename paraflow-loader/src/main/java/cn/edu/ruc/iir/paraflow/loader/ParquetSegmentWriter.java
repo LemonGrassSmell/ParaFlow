@@ -42,7 +42,7 @@ public class ParquetSegmentWriter
         // construct schema
         int columnNum = columnTypes.getStrCount();
         Map<Integer, Integer> fiberCount = segment.getfiberCount();
-        int partitionNum = segment.getFiberMaxTimestamps().length;
+        int partitionNum = segment.getPartitionNum();
         StringBuilder schemaBuilder = new StringBuilder("message " + segment.getTable() + " {");
         for (int i = 0; i < columnNum; i++) {
             switch (columnTypes.getStr(i)) {

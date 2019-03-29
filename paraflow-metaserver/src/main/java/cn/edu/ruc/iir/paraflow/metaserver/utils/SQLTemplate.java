@@ -232,14 +232,15 @@ public class SQLTemplate
                 grantTime);
     }
 
-    public static String createBlockIndex(long tblId, long value, long timeBegin, long timeEnd, String timeZone, String blockPath)
+    public static String createBlockIndex(long tblId, long value, long timeBegin, long timeEnd, String timeZone, int sortColumnId, String blockPath)
     {
-        return String.format("INSERT INTO meta_blockindex (tblid,fibervalue,timebegin,timeend,timezone,blockpath) VALUES(%d,%d,%d,%d,'%s','%s');",
+        return String.format("INSERT INTO meta_blockindex (tblid,fibervalue,timebegin,timeend,timezone,sortcolumnid,blockpath) VALUES(%d,%d,%d,%d,'%s',%d,'%s');",
                 tblId,
                 value,
                 timeBegin,
                 timeEnd,
                 timeZone,
+                sortColumnId,
                 blockPath);
     }
 

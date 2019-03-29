@@ -54,11 +54,13 @@ public class HDFSWriterTest
 {
     private final MetaClient metaClient = new MetaClient("127.0.0.1", 10012);
     private String dbName = "test";
-    private String tableName = "linkorder";
+    private String tableName = "lineorder";
     @Test
-    public void testDebug() {
+    public void testDebug()
+    {
         final Random random = new Random(System.nanoTime());
         StatusProto.ResponseStatus expect = StatusProto.ResponseStatus.newBuilder().setStatus(StatusProto.ResponseStatus.State.STATUS_OK).build();
+        StatusProto.ResponseStatus status1 = metaClient.createUser("alice1", "123456");
         MetaProto.StringListType dbs = metaClient.listDatabases();
         boolean dbExisted = false;
         for (int i = 0; i < dbs.getStrCount(); i++) {
@@ -131,88 +133,182 @@ public class HDFSWriterTest
                     "varchar(44)",
                     "bigint"
             };
-            metaClient.createTable(dbName, tableName, "parquet", 0,
+            metaClient.createTable(dbName, tableName, "parquet", 1,
                     "custkey%8", 22,
                     Arrays.asList(names), Arrays.asList(types));
         }
         final LoaderConfig config = LoaderConfig.INSTANCE();
         try {
             config.init();
-        } catch (ConfigFileNotFoundException e) {
+        }
+        catch (ConfigFileNotFoundException e) {
             e.printStackTrace();
         }
         final int capacity = 64; //count of records in each block
         final int partitionNum = 8;
-        Iterable<LineOrder> lineOrderIterable = TpchTable.LINEORDER.createGenerator(1000, 1, 1500, 0, 10000000);
+        Iterable<LineOrder> lineOrderIterable = TpchTable.LINEORDER.createGenerator(10, 1, 1500, 0, 10000000);
         Iterator<LineOrder> lineOrderIterator = lineOrderIterable.iterator();
-        ParaflowRecord[][] content = new ParaflowRecord[partitionNum][capacity];
-//        ParaflowRecord[] records = new ParaflowRecord[capacity];
-        int counter = 0;
-        long textSize;
-        int sortIndex = 0;
+        ParaflowRecord[][] content = new ParaflowRecord[partitionNum][partitionNum];
+        ArrayList<ParaflowRecord>[] fiberPartitions = new ArrayList[partitionNum];
+        ParaflowRecord[] records = new ParaflowRecord[capacity];
+        long textSize = 0;
         int fiberValue;
         int fiberIndex;
-        long[] fiberMaxTimeStamps = new long[partitionNum];
-        long[] fiberMinTimeStamps = new long[partitionNum];
+        long[] fiberMaxTimeStamps = new long[1];
+        long[] fiberMinTimeStamps = new long[1];
+        int a;
+        int b;
         Map<Integer, Integer> fiberCount = new HashMap<>();
+        Map<Integer, Integer> sortIndexByFiber = new HashMap<>();
+        int m;
+        int n;
+        int counter;
         Map<Integer, Integer> sortColumnIndex = new HashMap<>();
-        sortColumnIndex.put(1,3);
-        sortColumnIndex.put(2,10);
-        sortColumnIndex.put(3,11);
-        sortColumnIndex.put(4,12);
-        sortColumnIndex.put(5,13);
+        sortColumnIndex.put(0, 22);
+        sortColumnIndex.put(1, 3);
+        sortColumnIndex.put(2, 10);
+        sortColumnIndex.put(3, 11);
+        sortColumnIndex.put(4, 12);
+        sortColumnIndex.put(5, 13);
         long tempTimeStamp;
         ParaflowRecord record;
+        for (int j = 0; j < partitionNum; j++) {
+            fiberCount.put(j, 0);
+        }
+        for (int j = 0; j < partitionNum; j++) {
+            sortIndexByFiber.put(j, 0);
+        }
         while (lineOrderIterator.hasNext()) {
-            for (int j = 0; j < 8; j++) {
-                fiberCount.put(j, 0);
-            }
-            counter = 0;
-            textSize = 0;
-            while (lineOrderIterator.hasNext() && counter < capacity) {
-                record = lineOrderIterator.next();
-                long custkey = Long.parseLong(String.valueOf(record.getValue(1)));
-                fiberValue = fiberfunction(custkey);
-                fiberIndex = fiberCount.get(fiberValue);
-                content[fiberValue][fiberIndex++] = record;
+//            textSize = 0;
+            record = lineOrderIterator.next();
+            long custkey = Long.parseLong(String.valueOf(record.getValue(1)));
+            fiberValue = fiberfunction(custkey);
+            fiberIndex = fiberCount.get(fiberValue);
+            if (fiberIndex == 0) {
+                fiberPartitions[fiberValue] = new ArrayList<>();
+                fiberPartitions[fiberValue].add(record);
+                fiberIndex++;
                 fiberCount.put(fiberValue, fiberIndex);
-                counter++;
+            } else if (fiberIndex < capacity) {
+                fiberPartitions[fiberValue].add(record);
+                fiberIndex++;
+                fiberCount.put(fiberValue, fiberIndex);
+            } else {
+                //xiang content limian xunhuan fangru fiber zhi xiangtong de record
+                try {
+                    for (int toArray = 0; toArray < capacity; toArray++) {
+                        records[toArray] = fiberPartitions[fiberValue].get(toArray);
+                    }
+//                    records = (ParaflowRecord[]) fiberPartitions[fiberValue].toArray();
+                    records = sort(records, sortIndexByFiber.get(fiberValue));
+                } catch (Exception e) {
+                    System.out.println("wrong!!!");
+                }
+                counter = 0;
+                fiberMaxTimeStamps[0] = 0;
+                fiberMinTimeStamps[0] = Long.parseLong(String.valueOf(records[0].getValue(22)));
+                for (m = 0; m < partitionNum; m++) {
+                    for (n = 0; n < partitionNum; n++) {
+                        content[m][n] = records[counter];
+                        tempTimeStamp = Long.parseLong(String.valueOf(records[counter].getValue(22)));
+                        if (tempTimeStamp > fiberMaxTimeStamps[0]) {
+                            fiberMaxTimeStamps[0] = tempTimeStamp;
+                        }
+                        if (tempTimeStamp < fiberMinTimeStamps[0]) {
+                            fiberMinTimeStamps[0] = tempTimeStamp;
+                        }
+                        counter++;
+                    }
+                }
+                ParaflowSegment segment = new ParaflowSegment(content, new long[0], new long[0], 0.0d);
+                segment.setDb(dbName);
+                segment.setTable(tableName);
+                String path = config.getMemoryWarehouse() + dbName + "/" + tableName + "/" + config.getLoaderId() + System.nanoTime() + random.nextInt();
+                segment.setPath(path);
+                segment.setSortColId(sortColumnIndex.get(sortIndexByFiber.get(fiberValue) % 6));
+                Map<Integer, Integer> fiberCountFull = new HashMap<>();
+                for (int j = 0; j < partitionNum; j++) {
+                    fiberCountFull.put(j, partitionNum);
+                }
+                segment.setfiberCount(fiberCountFull);
+                segment.setFiberMaxTimestamps(fiberMaxTimeStamps);
+                segment.setFiberMinTimestamps(fiberMinTimeStamps);
+                segment.setPartitionNum(partitionNum);
+                segment.setFiberValue(fiberValue);
+                MetaProto.StringListType columnNames = metaClient.listColumns(dbName, tableName);
+                MetaProto.StringListType columnTypes = metaClient.listColumnsDataType(dbName, tableName);
+                final ParquetSegmentWriter segmentWriter = new ParquetSegmentWriter(segment, metaClient, null);
+                long start = System.currentTimeMillis();
+                if (segmentWriter.write(segment, columnNames, columnTypes)) {
+                    System.out.println("Binary size: " + (1.0 * textSize / 1024.0 / 1024.0) + " MB.");
+                }
+                long end = System.currentTimeMillis();
+                System.out.println("Time cost: " + (end - start));
+                flushSegment(segment);
+                fiberPartitions[fiberValue].clear();
+                fiberCount.put(fiberValue, 0);
+                sortIndexByFiber.put(fiberValue, sortIndexByFiber.get(fiberValue) + 1);
             }
-            for (int i = 0; i < partitionNum; i++) {
-                if (fiberCount.get(i) == 0) {
-                    fiberMaxTimeStamps[i] = -1;
-                    fiberMinTimeStamps[i] = -1;
-                } else {
-                    ParaflowRecord[] tempParaflowRecord = new ParaflowRecord[fiberCount.get(i)];
-                    System.arraycopy(content[i], 0, tempParaflowRecord, 0, fiberCount.get(i));
-//                tempParaflowRecord = content[i];
-                    try {
-                        tempParaflowRecord = sort(tempParaflowRecord, sortIndex);
-                    } catch (Exception e) {
-                        System.out.println("wrong!!!");
+        }
+        System.out.println("==========================================");
+        for (int partition = 0; partition < partitionNum; partition++) {
+            Map<Integer, Integer> fiberCountNotFull = new HashMap<>();
+            for (int j = 0; j < partitionNum; j++) {
+                fiberCountNotFull.put(j, 0);
+            }
+            try {
+                records = null;
+                records = new ParaflowRecord[fiberPartitions[partition].size()];
+                for (int toArray = 0; toArray < records.length; toArray++) {
+                    records[toArray] = fiberPartitions[partition].get(toArray);
+                }
+//                records = (ParaflowRecord[]) fiberPartitions[partition].toArray();
+                records = sort(records, sortIndexByFiber.get(partition));
+            } catch (Exception e) {
+                System.out.println("wrong!!!");
+            }
+            fiberMaxTimeStamps[0] = 0;
+            fiberMinTimeStamps[0] = Long.parseLong(String.valueOf(records[0].getValue(22)));
+            counter = 0;
+            a = 0;
+            b = 0;
+            content = null;
+            content = new ParaflowRecord[partitionNum][partitionNum];
+            while (counter < records.length) {
+                tempTimeStamp = Long.parseLong(String.valueOf(records[counter].getValue(22)));
+                if (tempTimeStamp > fiberMaxTimeStamps[0]) {
+                    fiberMaxTimeStamps[0] = tempTimeStamp;
+                }
+                if (tempTimeStamp < fiberMinTimeStamps[0]) {
+                    fiberMinTimeStamps[0] = tempTimeStamp;
+                }
+                if (a < partitionNum) {
+                    if (b < partitionNum - 1) {
+                        content[a][b++] = records[counter++];
+                        fiberCountNotFull.put(a, fiberCountNotFull.get(a)+1);
                     }
-                    fiberMaxTimeStamps[i] = 0;
-                    fiberMinTimeStamps[i] = Long.parseLong(String.valueOf(tempParaflowRecord[0].getValue(22)));
-                    for (int j = 0; j < fiberCount.get(i); j++) {
-                        content[i][j] = tempParaflowRecord[j];
-                        tempTimeStamp = Long.parseLong(String.valueOf(tempParaflowRecord[j].getValue(22)));
-                        if (tempTimeStamp > fiberMaxTimeStamps[i]) {
-                            fiberMaxTimeStamps[i] = tempTimeStamp;
-                        }
-                        if (tempTimeStamp < fiberMinTimeStamps[i]) {
-                            fiberMinTimeStamps[i] = tempTimeStamp;
-                        }
+                    else {
+                        content[a][b] = records[counter++];
+                        fiberCountNotFull.put(a, fiberCountNotFull.get(a)+1);
+                        b = 0;
+                        a++;
                     }
+                }
+                else {
+                    break;
                 }
             }
             ParaflowSegment segment = new ParaflowSegment(content, new long[0], new long[0], 0.0d);
             segment.setDb(dbName);
             segment.setTable(tableName);
-            String path = config.getMemoryWarehouse() + dbName + "/" + tableName + "/" + "i" + sortIndex + "i" + config.getLoaderId() + System.nanoTime() + random.nextInt();
+            String path = config.getMemoryWarehouse() + dbName + "/" + tableName + "/" + config.getLoaderId() + System.nanoTime() + random.nextInt();
             segment.setPath(path);
-            segment.setfiberCount(fiberCount);
+            segment.setSortColId(sortColumnIndex.get(sortIndexByFiber.get(partition) % 6));
+            segment.setfiberCount(fiberCountNotFull);
+            segment.setPartitionNum(partitionNum);
             segment.setFiberMaxTimestamps(fiberMaxTimeStamps);
             segment.setFiberMinTimestamps(fiberMinTimeStamps);
+            segment.setFiberValue(partition);
             MetaProto.StringListType columnNames = metaClient.listColumns(dbName, tableName);
             MetaProto.StringListType columnTypes = metaClient.listColumnsDataType(dbName, tableName);
             final ParquetSegmentWriter segmentWriter = new ParquetSegmentWriter(segment, metaClient, null);
@@ -223,24 +319,22 @@ public class HDFSWriterTest
             long end = System.currentTimeMillis();
             System.out.println("Time cost: " + (end - start));
             flushSegment(segment);
-            sortIndex++;
         }
     }
 
-    private int fiberfunction(long customerKey) {
-        return (int)(customerKey%8);
+    private int fiberfunction(long customerKey)
+    {
+        return (int) (customerKey % 8);
     }
 
-    private void flushSegment                                                        (ParaflowSegment segment)
+    private void flushSegment(ParaflowSegment segment)
     {
         final LoaderConfig config = LoaderConfig.INSTANCE();
         String segmentPath = segment.getPath();
         int fileNamePoint = segmentPath.lastIndexOf("/");
         int tblPoint = segmentPath.lastIndexOf("/", fileNamePoint - 1);
         int dbPoint = segmentPath.lastIndexOf("/", tblPoint - 1);
-        int indexEndPoint = segmentPath.lastIndexOf("i");
-        int indexStartPoint = segmentPath.lastIndexOf("i", indexEndPoint - 1);
-        int sortColumnId = Integer.parseInt(segmentPath.substring(indexStartPoint + 1, indexEndPoint));
+        int sortColumnId = segment.getSortColId();
         String suffix = segmentPath.substring(dbPoint + 1);
         String newPath = config.getHDFSWarehouse() + suffix;
         Path outputPath = new Path(newPath);
@@ -257,15 +351,17 @@ public class HDFSWriterTest
             long[] fiberMinTimestamps = segment.getFiberMinTimestamps();
             long[] fiberMaxTimestamps = segment.getFiberMaxTimestamps();
             int partitionNum = fiberMinTimestamps.length;
-            for (int i = 0; i < partitionNum; i++) {
-                if (fiberMinTimestamps[i] == -1) {
-                    continue;
-                }
-                if (fiberMaxTimestamps[i] == -1) {
-                    continue;
-                }
-                metaClient.createBlockIndex(dbName, tableName, i, fiberMinTimestamps[i], fiberMaxTimestamps[i], sortColumnId, newPath);
-            }
+            int fiberValue = segment.getFiberValue();
+//            for (int i = 0; i < partitionNum; i++) {
+//                if (fiberMinTimestamps[i] == -1) {
+//                    continue;
+//                }
+//                if (fiberMaxTimestamps[i] == -1) {
+//                    continue;
+//                }
+//                metaClient.createBlockIndex(dbName, tableName, i, fiberMinTimestamps[i], fiberMaxTimestamps[i], sortColumnId, newPath);
+//            }
+            metaClient.createBlockIndex(dbName, tableName, fiberValue, fiberMinTimestamps[0], fiberMaxTimestamps[0], sortColumnId, newPath);
         }
         catch (IOException e) {
             e.printStackTrace();
@@ -281,13 +377,16 @@ public class HDFSWriterTest
     }
 
     //from small to big sort
-    private ParaflowRecord[] sort(ParaflowRecord[] content, int index) {
+    private ParaflowRecord[] sort(ParaflowRecord[] content, int index)
+    {
         ArrayList<ParaflowRecord> contentArray = new ArrayList<>();
         contentArray.addAll(Arrays.asList(content));
         if (index % 6 == 0) {
-            contentArray.sort(new Comparator<ParaflowRecord>() {
+            contentArray.sort(new Comparator<ParaflowRecord>()
+            {
                 @Override
-                public int compare(ParaflowRecord o1, ParaflowRecord o2) {
+                public int compare(ParaflowRecord o1, ParaflowRecord o2)
+                {
                     double totalPrice1 = Double.parseDouble(o1.getValue(22).toString());
                     double totalPrice2 = Double.parseDouble(o2.getValue(22).toString());
                     if (totalPrice1 > totalPrice2) {
@@ -299,10 +398,13 @@ public class HDFSWriterTest
                     return 0;
                 }
             });
-        } else if (index % 6 == 1) {
-            contentArray.sort(new Comparator<ParaflowRecord>() {
+        }
+        else if (index % 6 == 1) {
+            contentArray.sort(new Comparator<ParaflowRecord>()
+            {
                 @Override
-                public int compare(ParaflowRecord o1, ParaflowRecord o2) {
+                public int compare(ParaflowRecord o1, ParaflowRecord o2)
+                {
                     double totalPrice1 = Double.parseDouble(o1.getValue(3).toString());
                     double totalPrice2 = Double.parseDouble(o2.getValue(3).toString());
                     if (totalPrice1 > totalPrice2) {
@@ -314,10 +416,13 @@ public class HDFSWriterTest
                     return 0;
                 }
             });
-        } else if (index % 6 == 2) {
-            contentArray.sort(new Comparator<ParaflowRecord>() {
+        }
+        else if (index % 6 == 2) {
+            contentArray.sort(new Comparator<ParaflowRecord>()
+            {
                 @Override
-                public int compare(ParaflowRecord o1, ParaflowRecord o2) {
+                public int compare(ParaflowRecord o1, ParaflowRecord o2)
+                {
                     double totalPrice1 = Double.parseDouble(o1.getValue(10).toString());
                     double totalPrice2 = Double.parseDouble(o2.getValue(10).toString());
                     if (totalPrice1 > totalPrice2) {
@@ -329,10 +434,13 @@ public class HDFSWriterTest
                     return 0;
                 }
             });
-        } else if (index % 6 == 3) {
-            contentArray.sort(new Comparator<ParaflowRecord>() {
+        }
+        else if (index % 6 == 3) {
+            contentArray.sort(new Comparator<ParaflowRecord>()
+            {
                 @Override
-                public int compare(ParaflowRecord o1, ParaflowRecord o2) {
+                public int compare(ParaflowRecord o1, ParaflowRecord o2)
+                {
                     double totalPrice1 = Double.parseDouble(o1.getValue(11).toString());
                     double totalPrice2 = Double.parseDouble(o2.getValue(11).toString());
                     if (totalPrice1 > totalPrice2) {
@@ -344,10 +452,13 @@ public class HDFSWriterTest
                     return 0;
                 }
             });
-        } else if (index % 6 == 4) {
-            contentArray.sort(new Comparator<ParaflowRecord>() {
+        }
+        else if (index % 6 == 4) {
+            contentArray.sort(new Comparator<ParaflowRecord>()
+            {
                 @Override
-                public int compare(ParaflowRecord o1, ParaflowRecord o2) {
+                public int compare(ParaflowRecord o1, ParaflowRecord o2)
+                {
                     double totalPrice1 = Double.parseDouble(o1.getValue(12).toString());
                     double totalPrice2 = Double.parseDouble(o2.getValue(12).toString());
                     if (totalPrice1 > totalPrice2) {
@@ -359,10 +470,13 @@ public class HDFSWriterTest
                     return 0;
                 }
             });
-        } else if (index % 6 == 5) {
-            contentArray.sort(new Comparator<ParaflowRecord>() {
+        }
+        else if (index % 6 == 5) {
+            contentArray.sort(new Comparator<ParaflowRecord>()
+            {
                 @Override
-                public int compare(ParaflowRecord o1, ParaflowRecord o2) {
+                public int compare(ParaflowRecord o1, ParaflowRecord o2)
+                {
                     double totalPrice1 = Double.parseDouble(o1.getValue(13).toString());
                     double totalPrice2 = Double.parseDouble(o2.getValue(13).toString());
                     if (totalPrice1 > totalPrice2) {

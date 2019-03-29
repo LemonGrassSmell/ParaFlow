@@ -26,6 +26,9 @@ public class ParaflowSegment
     private long flushTime;
     private volatile StorageLevel storageLevel;
     private Map<Integer, Integer> fiberCount;
+    private int sortColId;
+    private int partitionNum;
+    private int fiberValue;
 
     public ParaflowSegment(ParaflowRecord[][] records, long[] fiberMinTimestamps, long[] fiberMaxTimestamps,
                            double avgTimestamp)
@@ -103,15 +106,16 @@ public class ParaflowSegment
         return fiberMinTimestamps;
     }
 
-    public void setFiberMaxTimestamps(long[] FiberMaxTimestamps)
+    public void setFiberMaxTimestamps(long[] fiberMaxTimestamps)
     {
-        this.fiberMaxTimestamps = FiberMaxTimestamps;
+        this.fiberMaxTimestamps = fiberMaxTimestamps;
     }
 
-    public void setFiberMinTimestamps(long[] FiberMinTimestamps)
+    public void setFiberMinTimestamps(long[] fiberMinTimestamps)
     {
-        this.fiberMinTimestamps = FiberMinTimestamps;
+        this.fiberMinTimestamps = fiberMinTimestamps;
     }
+
     public Map<Integer, Integer> getfiberCount()
     {
         return fiberCount;
@@ -145,5 +149,35 @@ public class ParaflowSegment
     public long getFlushTime()
     {
         return flushTime;
+    }
+
+    public int getSortColId()
+    {
+        return sortColId;
+    }
+
+    public void setSortColId(int sortColId)
+    {
+        this.sortColId = sortColId;
+    }
+
+    public int getPartitionNum()
+    {
+        return partitionNum;
+    }
+
+    public void setPartitionNum(int partitionNum)
+    {
+        this.partitionNum = partitionNum;
+    }
+
+    public int getFiberValue()
+    {
+        return fiberValue;
+    }
+
+    public void setFiberValue(int fiberValue)
+    {
+        this.fiberValue = fiberValue;
     }
 }

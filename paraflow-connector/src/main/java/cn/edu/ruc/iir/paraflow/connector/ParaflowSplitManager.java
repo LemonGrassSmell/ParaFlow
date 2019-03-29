@@ -16,6 +16,7 @@ package cn.edu.ruc.iir.paraflow.connector;
 import cn.edu.ruc.iir.paraflow.commons.ParaflowFiberPartitioner;
 import cn.edu.ruc.iir.paraflow.commons.utils.BytesUtils;
 import cn.edu.ruc.iir.paraflow.connector.exception.TableNotFoundException;
+import cn.edu.ruc.iir.paraflow.connector.handle.ParaflowColumnHandle;
 import cn.edu.ruc.iir.paraflow.connector.handle.ParaflowTableHandle;
 import cn.edu.ruc.iir.paraflow.connector.handle.ParaflowTableLayoutHandle;
 import cn.edu.ruc.iir.paraflow.connector.impl.ParaflowMetaDataReader;
@@ -40,6 +41,7 @@ import org.apache.hadoop.fs.Path;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -89,20 +91,30 @@ implements ConnectorSplitManager
         String tblName = tableHandle.get().getTableName();
         String partitionerName = layout.getFiberPartitioner();
         Optional<TupleDomain<ColumnHandle>> predicatesOptional = layout.getPredicates();
+//        logger.warn("============================================================");
+//        logger.warn("predicatesOptional.get().getDomains().get().size():" + predicatesOptional.get().getDomains().get().size());
+//        for (int i = 0; i < predicatesOptional.get().getDomains().get().size(); i++) {
+//            logger.warn("++++++++++++++++++++" + i + "+++++++++++++++++++++++");
+//            logger.warn(predicatesOptional.get().getDomains().get().keySet().toString());
+//        }
 
         List<ConnectorSplit> splits = new ArrayList<>();
         List<Path> files;
-
+//        logger.warn("predicatesOptional.isPresent():" + predicatesOptional.isPresent());
         if (predicatesOptional.isPresent()) {
             TupleDomain<ColumnHandle> predicates = predicatesOptional.get();
             ColumnHandle fiberCol = layout.getFiberColumn();
+//            logger.warn(((ParaflowColumnHandle) fiberCol).getName());
             ColumnHandle timeCol = layout.getTimestampColumn();
-//            Map<String, Integer> sortColumns = new HashMap<>();
-//            sortColumns.put("lo_totalprice", 1);
-//            sortColumns.put("lo_quantity", 2);
-//            sortColumns.put("lo_extendedprice", 3);
-//            sortColumns.put("lo_discount", 4);
-//            sortColumns.put("lo_tax", 5);
+//            logger.warn(((ParaflowColumnHandle) timeCol).getName());
+            Map<String, Integer> sortColumns = new HashMap<>();
+            sortColumns.put("lo_creation", 22);
+            sortColumns.put("lo_totalprice", 3);
+            sortColumns.put("lo_quantity", 10);
+            sortColumns.put("lo_extendedprice", 11);
+            sortColumns.put("lo_discount", 12);
+            sortColumns.put("lo_tax", 13);
+            int sortColumnId = -1;
             Optional<Map<ColumnHandle, Domain>> domains = predicates.getDomains();
             if (!domains.isPresent()) {
                 files = fsFactory.listFiles(new Path(tablePath));
@@ -155,33 +167,31 @@ implements ConnectorSplitManager
                         }
                     }
                 }
-//                for(ColumnHandle key:keys){
-//                    key.g
-//                }
-                //若是聚合查询
-                // 若跳出循环
-                //   则用跳出循环时指示的那个列作为sortcolumnid，
-                // 若没有跳出循环
-                //   则用timestamp即index = 0作为sortcolumnid
-//                if (fiber == -1 && timeLow == -1L && timeHigh == -1L && sortColumn == -1) {
-                if (fiber == -1 && timeLow == -1L && timeHigh == -1L) {
+                for (ColumnHandle key : keys) {
+                    if (sortColumns.containsKey(((ParaflowColumnHandle) key).getName())) {
+                        sortColumnId = sortColumns.get(((ParaflowColumnHandle) timeCol).getName());
+                        break;
+                    }
+                }
+                fiberId = fiber % 8;
+                //假设所有的查询都是聚合查询,直接按照聚合查询处理,不再判断了
+                if (fiberId == -1 && timeLow == -1L && timeHigh == -1L && sortColumnId == -1) {
+                    logger.warn("----------------------------------------------------");
                     files = fsFactory.listFiles(new Path(tablePath));
                 }
                 else {
-//                    files = metaDataQuery.filterBlocks(
-//                            dbName,
-//                            tblName,
-//                            fiberId,
-//                            timeLow,
-//                            timeHigh,
-//                            sortColumnId)
-//                            .stream().map(Path::new).collect(Collectors.toList());         // filter file paths with fiber domains and time domains using meta server
+                    logger.warn("+++++++++++++++++++filterblocks+++++++++++++++++++++++");
+                    logger.warn("fiber = " + fiberId);
+                    logger.warn("timeLow = " + timeLow);
+                    logger.warn("timeHigh = " + timeHigh);
+                    logger.warn("sortColumnId = " + sortColumnId);
                     files = metaDataQuery.filterBlocks(
                             dbName,
                             tblName,
                             fiberId,
                             timeLow,
-                            timeHigh)
+                            timeHigh,
+                            sortColumnId)
                             .stream().map(Path::new).collect(Collectors.toList());
                 }
             }
@@ -194,7 +204,7 @@ implements ConnectorSplitManager
                         tableHandle.get().getSchemaTableName(),
                         file.toString(), 0, -1,
                         fsFactory.getBlockLocations(file, 0, Long.MAX_VALUE))));
-        splits.forEach(split -> logger.info(split.toString()));
+//        splits.forEach(split -> logger.info(split.toString()));
         Collections.shuffle(splits);
 
         return new FixedSplitSource(splits);
