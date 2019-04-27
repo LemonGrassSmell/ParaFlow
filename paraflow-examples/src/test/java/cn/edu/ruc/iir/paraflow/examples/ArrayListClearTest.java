@@ -4,7 +4,8 @@ import org.testng.annotations.Test;
 
 import java.util.ArrayList;
 
-public class ArrayListClearTest {
+public class ArrayListClearTest
+{
     @Test
     public void arrayListClearTest()
     {

@@ -164,12 +164,11 @@ public class HDFSWriterTest
         int n;
         int counter;
         Map<Integer, Integer> sortColumnIndex = new HashMap<>();
-        sortColumnIndex.put(0, 22);
-        sortColumnIndex.put(1, 3);
-        sortColumnIndex.put(2, 10);
-        sortColumnIndex.put(3, 11);
-        sortColumnIndex.put(4, 12);
-        sortColumnIndex.put(5, 13);
+        sortColumnIndex.put(0, 3);
+        sortColumnIndex.put(1, 10);
+        sortColumnIndex.put(2, 11);
+        sortColumnIndex.put(3, 12);
+        sortColumnIndex.put(4, 13);
         long tempTimeStamp;
         ParaflowRecord record;
         for (int j = 0; j < partitionNum; j++) {
@@ -189,19 +188,21 @@ public class HDFSWriterTest
                 fiberPartitions[fiberValue].add(record);
                 fiberIndex++;
                 fiberCount.put(fiberValue, fiberIndex);
-            } else if (fiberIndex < capacity) {
+            }
+            else if (fiberIndex < capacity) {
                 fiberPartitions[fiberValue].add(record);
                 fiberIndex++;
                 fiberCount.put(fiberValue, fiberIndex);
-            } else {
-                //xiang content limian xunhuan fangru fiber zhi xiangtong de record
+            }
+            else {
                 try {
                     for (int toArray = 0; toArray < capacity; toArray++) {
                         records[toArray] = fiberPartitions[fiberValue].get(toArray);
                     }
 //                    records = (ParaflowRecord[]) fiberPartitions[fiberValue].toArray();
                     records = sort(records, sortIndexByFiber.get(fiberValue));
-                } catch (Exception e) {
+                }
+                catch (Exception e) {
                     System.out.println("wrong!!!");
                 }
                 counter = 0;
@@ -225,7 +226,7 @@ public class HDFSWriterTest
                 segment.setTable(tableName);
                 String path = config.getMemoryWarehouse() + dbName + "/" + tableName + "/" + config.getLoaderId() + System.nanoTime() + random.nextInt();
                 segment.setPath(path);
-                segment.setSortColId(sortColumnIndex.get(sortIndexByFiber.get(fiberValue) % 6));
+                segment.setSortColId(sortColumnIndex.get(sortIndexByFiber.get(fiberValue) % 5));
                 Map<Integer, Integer> fiberCountFull = new HashMap<>();
                 for (int j = 0; j < partitionNum; j++) {
                     fiberCountFull.put(j, partitionNum);
@@ -264,7 +265,8 @@ public class HDFSWriterTest
                 }
 //                records = (ParaflowRecord[]) fiberPartitions[partition].toArray();
                 records = sort(records, sortIndexByFiber.get(partition));
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 System.out.println("wrong!!!");
             }
             fiberMaxTimeStamps[0] = 0;
@@ -285,11 +287,11 @@ public class HDFSWriterTest
                 if (a < partitionNum) {
                     if (b < partitionNum - 1) {
                         content[a][b++] = records[counter++];
-                        fiberCountNotFull.put(a, fiberCountNotFull.get(a)+1);
+                        fiberCountNotFull.put(a, fiberCountNotFull.get(a) + 1);
                     }
                     else {
                         content[a][b] = records[counter++];
-                        fiberCountNotFull.put(a, fiberCountNotFull.get(a)+1);
+                        fiberCountNotFull.put(a, fiberCountNotFull.get(a) + 1);
                         b = 0;
                         a++;
                     }
@@ -303,7 +305,7 @@ public class HDFSWriterTest
             segment.setTable(tableName);
             String path = config.getMemoryWarehouse() + dbName + "/" + tableName + "/" + config.getLoaderId() + System.nanoTime() + random.nextInt();
             segment.setPath(path);
-            segment.setSortColId(sortColumnIndex.get(sortIndexByFiber.get(partition) % 6));
+            segment.setSortColId(sortColumnIndex.get(sortIndexByFiber.get(partition) % 5));
             segment.setfiberCount(fiberCountNotFull);
             segment.setPartitionNum(partitionNum);
             segment.setFiberMaxTimestamps(fiberMaxTimeStamps);
@@ -381,25 +383,7 @@ public class HDFSWriterTest
     {
         ArrayList<ParaflowRecord> contentArray = new ArrayList<>();
         contentArray.addAll(Arrays.asList(content));
-        if (index % 6 == 0) {
-            contentArray.sort(new Comparator<ParaflowRecord>()
-            {
-                @Override
-                public int compare(ParaflowRecord o1, ParaflowRecord o2)
-                {
-                    double totalPrice1 = Double.parseDouble(o1.getValue(22).toString());
-                    double totalPrice2 = Double.parseDouble(o2.getValue(22).toString());
-                    if (totalPrice1 > totalPrice2) {
-                        return 1;
-                    }
-                    if (totalPrice1 < totalPrice2) {
-                        return -1;
-                    }
-                    return 0;
-                }
-            });
-        }
-        else if (index % 6 == 1) {
+        if (index % 5 == 0) {
             contentArray.sort(new Comparator<ParaflowRecord>()
             {
                 @Override
@@ -417,7 +401,7 @@ public class HDFSWriterTest
                 }
             });
         }
-        else if (index % 6 == 2) {
+        else if (index % 5 == 1) {
             contentArray.sort(new Comparator<ParaflowRecord>()
             {
                 @Override
@@ -435,7 +419,7 @@ public class HDFSWriterTest
                 }
             });
         }
-        else if (index % 6 == 3) {
+        else if (index % 5 == 2) {
             contentArray.sort(new Comparator<ParaflowRecord>()
             {
                 @Override
@@ -453,7 +437,7 @@ public class HDFSWriterTest
                 }
             });
         }
-        else if (index % 6 == 4) {
+        else if (index % 5 == 3) {
             contentArray.sort(new Comparator<ParaflowRecord>()
             {
                 @Override
@@ -471,7 +455,7 @@ public class HDFSWriterTest
                 }
             });
         }
-        else if (index % 6 == 5) {
+        else if (index % 5 == 4) {
             contentArray.sort(new Comparator<ParaflowRecord>()
             {
                 @Override
